@@ -1,0 +1,75 @@
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Python cache/bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Packaging/build
+build/
+dist/
+.eggs/
+*.egg-info/
+.wheels/
+pip-wheel-metadata/
+
+# Testing/coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.pytype/
+.pyre/
+.ruff_cache/
+.pylint.d/
+
+# Jupyter
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# Logs
+*.log
+logs/
+
+# Tools
+.tox/
+.nox/
+.cache/
+
+# Local config/env
+.env
+.env.*
+*.local
+*.secret
+secrets.*
+credentials.*
+
+# Data/artifacts (keep placeholders if needed)
+data/
+datasets/
+models/
+checkpoints/
+outputs/
+tmp/
+temp/
+!data/.gitkeep
+!datasets/.gitkeep
+!models/.gitkeep
+!checkpoints/.gitkeep
