@@ -1,10 +1,12 @@
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
+
 from langchain_community.document_loaders import TextLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_chroma import Chroma
+
 import gradio as gr
 
 load_dotenv(override=True)
@@ -17,7 +19,7 @@ books["large_thumbnail"] = np.where(
     books["large_thumbnail"],
 )
 
-raw_documents = TextLoader("tagged_description.txt", encoding='utf-8').load()
+raw_documents = TextLoader("tagged_description.txt", encoding="utf-8").load()
 text_splitter = CharacterTextSplitter(separator="\n", chunk_size=1, chunk_overlap=0)
 documents = text_splitter.split_documents(raw_documents)
 db_books = Chroma.from_documents(documents, OpenAIEmbeddings())
@@ -30,6 +32,7 @@ def retrieve_semantic_recommendations(
     initial_top_k: int = 50,
     final_top_k: int = 16,
 ) -> pd.DataFrame:
+
     recs = db_books.similarity_search(query, k=initial_top_k)
     books_list = [int(rec.page_content.strip('"').split()[0]) for rec in recs]
     book_recs = books[books["isbn13"].isin(books_list)].head(initial_top_k)
@@ -78,119 +81,33 @@ def recommend_books(query: str, category: str, tone: str):
 
 
 categories = ["All"] + sorted(books["simple_categories"].unique())
-tones = ["All", "Happy", "Surprising", "Angry", "Suspenseful", "Sad"]
+tones = ["All"] + ["Happy", "Surprising", "Angry", "Suspenseful", "Sad"]
 
-with gr.Blocks(
-    theme=gr.themes.Base(
-        primary_hue="indigo",
-        secondary_hue="purple",
-        neutral_hue="slate",
-    ),
-    css="""
-    .gradio-container {
-        @apply max-w-6xl mx-auto p-4;
-        font-family: 'Inter', sans-serif;
-    }
-    .header {
-        @apply text-center mb-8;
-    }
-    .header h1 {
-        @apply text-4xl font-bold text-indigo-700 dark:text-indigo-400 mb-2;
-    }
-    .header p {
-        @apply text-lg text-slate-600 dark:text-slate-300;
-    }
-    .input-section {
-        @apply bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md mb-6;
-    }
-    .input-row {
-        @apply flex flex-col md:flex-row gap-4 w-full;
-    }
-    .input-item {
-        @apply flex-1;
-    }
-    .gallery-section {
-        @apply bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md;
-    }
-    .gallery-title {
-        @apply text-2xl font-semibold text-slate-800 dark:text-slate-200 mb-4;
-    }
-    .gradio-button {
-        @apply bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200;
-    }
-    .gradio-button:hover {
-        @apply shadow-md transform -translate-y-0.5;
-    }
-    .gradio-textbox, .gradio-dropdown {
-        @apply border border-slate-300 dark:border-slate-600 rounded-lg p-3 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200;
-    }
-    .gradio-gallery {
-        @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4;
-    }
-    .gradio-gallery-item {
-        @apply rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200;
-    }
-    .gradio-gallery-item:hover {
-        @apply transform -translate-y-1;
-    }
-    .gradio-gallery-item img {
-        @apply w-full h-48 object-cover rounded-t-lg;
-    }
-    .gradio-gallery-caption {
-        @apply p-3 bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-b-lg;
-    }
-    """,
-) as dashboard:
+with gr.Blocks(theme=gr.themes.Glass()) as dashboard:
+    gr.Markdown("# Semantic book recommender")
 
-    with gr.Column(elem_classes="gradio-container"):
-        # Header
-        with gr.Column(elem_classes="header"):
-            gr.Markdown(
-                """
-            # Semantic Book Recommender
-            Discover your next favorite read with AI-powered recommendations
-            """
-            )
+    with gr.Row():
+        user_query = gr.Textbox(
+            label="Please enter a description of a book:",
+            placeholder="e.g., A story about forgiveness",
+        )
+        category_dropdown = gr.Dropdown(
+            choices=categories, label="Select a category:", value="All"
+        )
+        tone_dropdown = gr.Dropdown(
+            choices=tones, label="Select an emotional tone:", value="All"
+        )
+        submit_button = gr.Button("Find recommendations")
 
-        # Input section
-        with gr.Column(elem_classes="input-section"):
-            with gr.Row(elem_classes="input-row"):
-                with gr.Column(elem_classes="input-item"):
-                    user_query = gr.Textbox(
-                        label="Describe what you're looking for:",
-                        placeholder="e.g., A sci-fi adventure about space exploration",
-                        elem_classes="gradio-textbox",
-                    )
-                with gr.Column(elem_classes="input-item"):
-                    category_dropdown = gr.Dropdown(
-                        choices=categories,
-                        label="Category",
-                        value="All",
-                        elem_classes="gradio-dropdown",
-                    )
-                with gr.Column(elem_classes="input-item"):
-                    tone_dropdown = gr.Dropdown(
-                        choices=tones,
-                        label="Emotional Tone",
-                        value="All",
-                        elem_classes="gradio-dropdown",
-                    )
-                with gr.Column(elem_classes="input-item", min_width=120):
-                    submit_button = gr.Button(
-                        "Find Books", elem_classes="gradio-button"
-                    )
-
-        with gr.Column(elem_classes="gallery-section"):
-            gr.Markdown("## Recommendations", elem_classes="gallery-title")
-            output = gr.Gallery(
-                label="", columns=6, rows=2, elem_classes="gradio-gallery"
-            )
+    gr.Markdown("## Recommendations")
+    output = gr.Gallery(label="Recommended books", columns=8, rows=2)
 
     submit_button.click(
         fn=recommend_books,
         inputs=[user_query, category_dropdown, tone_dropdown],
         outputs=output,
     )
+
 
 if __name__ == "__main__":
     dashboard.launch()
