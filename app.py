@@ -114,18 +114,25 @@ def format_results(df: pd.DataFrame):
 
 # ----- FastAPI app & routes -----
 app = FastAPI(title="Semantic Book Recommender", version="1.0.0")
+os.makedirs("static", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 categories = ["All"] + sorted(books["simple_categories"].dropna().unique())
 tones = ["All", "Happy", "Surprising", "Angry", "Suspenseful", "Sad"]
+FALLBACK_IMG_URL = "/cover-not-found.jpg"
 
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "categories": categories, "tones": tones},
+        {
+            "request": request,
+            "categories": categories,
+            "tones": tones,
+            "fallback_img": FALLBACK_IMG_URL,
+        },
     )
 
 
