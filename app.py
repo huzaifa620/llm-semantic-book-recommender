@@ -120,7 +120,11 @@ templates = Jinja2Templates(directory="templates")
 
 categories = ["All"] + sorted(books["simple_categories"].dropna().unique())
 tones = ["All", "Happy", "Surprising", "Angry", "Suspenseful", "Sad"]
-FALLBACK_IMG_URL = "/cover-not-found.jpg"
+
+
+@app.get("/health")
+def health():
+    return {"ok": True}
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -131,7 +135,6 @@ def home(request: Request):
             "request": request,
             "categories": categories,
             "tones": tones,
-            "fallback_img": FALLBACK_IMG_URL,
         },
     )
 

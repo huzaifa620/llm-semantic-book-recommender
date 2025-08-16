@@ -9,27 +9,80 @@
       content="Find your next favorite book with semantic & emotion-aware search."
     />
 
-    <!-- Tailwind CDN -->
+    <!-- Tailwind CDN with custom config -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      tailwind.config = { darkMode: "class" };
-      // Theme init: system preference or saved choice
-      const saved = localStorage.getItem("theme");
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0f9ff",
+                100: "#e0f2fe",
+                200: "#bae6fd",
+                300: "#7dd3fc",
+                400: "#38bdf8",
+                500: "#0ea5e9",
+                600: "#0284c7",
+                700: "#0369a1",
+                800: "#075985",
+                900: "#0c4a6e",
+              },
+              secondary: {
+                50: "#f5f3ff",
+                100: "#ede9fe",
+                200: "#ddd6fe",
+                300: "#c4b5fd",
+                400: "#a78bfa",
+                500: "#8b5cf6",
+                600: "#7c3aed",
+                700: "#6d28d9",
+                800: "#5b21b6",
+                900: "#4c1d95",
+              },
+            },
+            fontFamily: {
+              sans: ["Inter", "system-ui", "sans-serif"],
+            },
+            boxShadow: {
+              card: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.02)",
+              "card-hover":
+                "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+            },
+          },
+        },
+      };
+
+      // Theme initialization with system preference
+      const savedTheme = localStorage.getItem("theme");
       const prefersDark = window.matchMedia(
         "(prefers-color-scheme: dark)"
       ).matches;
-      if (saved === "dark" || (!saved && prefersDark)) {
+      if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
         document.documentElement.classList.add("dark");
       }
     </script>
 
+    <!-- Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <style>
-      /* Subtle container padding on small screens */
-      .page {
-        padding-left: clamp(12px, 3vw, 20px);
-        padding-right: clamp(12px, 3vw, 20px);
+      /* Smooth transitions and scroll behavior */
+      html {
+        scroll-behavior: smooth;
       }
-      /* Multi-line clamp utility without Tailwind plugin */
+
+      body {
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+
+      /* Multi-line text clamping */
       .clamp-2 {
         display: -webkit-box;
         -webkit-box-orient: vertical;
@@ -48,6 +101,44 @@
         overflow: hidden;
         -webkit-line-clamp: 4;
       }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+      }
+      .dark ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Smooth loading for images */
+      img {
+        transition: opacity 0.3s ease;
+      }
+      img:not([data-loaded]) {
+        opacity: 0;
+      }
+      img[data-loaded] {
+        opacity: 1;
+      }
+
+      /* Button hover effects */
+      .btn-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .btn-hover:hover {
+        transform: translateY(-1px);
+      }
     </style>
 
     <link
@@ -57,172 +148,349 @@
   </head>
 
   <body
-    class="h-full bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+    class="h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans antialiased"
   >
-    <!-- Header -->
-    <header
-      class="page max-w-7xl mx-auto pt-6 pb-4 flex items-start justify-between gap-4"
-    >
-      <div>
-        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
-          Semantic Book Recommender
-        </h1>
-        <p class="text-slate-600 dark:text-slate-300 mt-1 text-sm md:text-base">
-          Describe what you want. We’ll surface books that match the topic and
-          the feeling.
-        </p>
-      </div>
-      <button
-        id="themeToggle"
-        class="shrink-0 inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+    <!-- App Container -->
+    <div class="min-h-full flex flex-col">
+      <!-- Header -->
+      <header
+        class="sticky top-0 z-10 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800"
       >
-        <span class="hidden dark:inline">🌞 Light</span>
-        <span class="dark:hidden">🌙 Dark</span>
-      </button>
-    </header>
-
-    <!-- Search Card -->
-    <main class="page max-w-7xl mx-auto pb-12">
-      <section
-        class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm p-4 md:p-6"
-      >
-        <form
-          id="form"
-          class="grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-4 items-end"
+        <div
+          class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between"
         >
-          <div class="lg:col-span-6">
-            <label
-              for="query"
-              class="text-sm text-slate-600 dark:text-slate-300"
-              >What are you in the mood for?</label
+          <div class="flex items-center space-x-4">
+            <h1
+              class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent cursor-pointer"
             >
-            <input
-              id="query"
-              name="query"
-              class="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
-              placeholder="e.g., book about WW2"
-              required
-            />
+              Semantic Book Recommender
+            </h1>
           </div>
 
-          <div class="lg:col-span-3">
-            <label
-              for="category"
-              class="text-sm text-slate-600 dark:text-slate-300"
-              >Category</label
-            >
-            <select
-              id="category"
-              name="category"
-              class="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
-            >
-              {% for c in categories %}
-              <option value="{{c}}">{{c}}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="lg:col-span-2">
-            <label for="tone" class="text-sm text-slate-600 dark:text-slate-300"
-              >Emotional tone</label
-            >
-            <select
-              id="tone"
-              name="tone"
-              class="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
-            >
-              {% for t in tones %}
-              <option value="{{t}}">{{t}}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <div class="lg:col-span-1 flex justify-end">
+          <div class="flex items-center space-x-4">
             <button
-              id="submit"
-              type="submit"
-              class="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 transition"
+              id="themeToggle"
+              aria-label="Toggle dark mode"
+              class="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
-              Find Books
+              <span class="hidden dark:inline">🌞</span>
+              <span class="dark:hidden">🌙</span>
             </button>
           </div>
-        </form>
-
-        <!-- Loader -->
-        <div
-          id="loader"
-          class="hidden mt-4 flex items-center gap-3 text-slate-600 dark:text-slate-300"
-        >
-          <span
-            class="inline-block h-5 w-5 rounded-full border-2 border-slate-300 border-t-transparent animate-spin"
-          ></span>
-          <span>Searching…</span>
         </div>
+      </header>
 
-        <!-- Gallery -->
-        <h2 class="text-lg md:text-xl font-bold mt-6 mb-3">Recommendations</h2>
-        <div
-          id="empty"
-          class="hidden text-slate-500 dark:text-slate-400 text-sm border border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4"
-        >
-          Try a prompt like <em>“found family space opera”</em>, or select a
-          tone to re-rank.
+      <!-- Main Content -->
+      <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <!-- Hero Section -->
+          <section class="mb-12 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">
+              Discover Your Next Favorite Book
+            </h2>
+            <p
+              class="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto"
+            >
+              Describe what you're in the mood for. We'll find books that match
+              both the topic and the feeling.
+            </p>
+          </section>
+
+          <!-- Search Card -->
+          <section class="mb-12">
+            <div
+              class="bg-white dark:bg-slate-900 rounded-xl shadow-card border border-slate-200 dark:border-slate-800 overflow-hidden"
+            >
+              <div class="p-6 md:p-8">
+                <form id="form" class="space-y-6">
+                  <div class="space-y-2">
+                    <label
+                      for="query"
+                      class="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                    >
+                      What are you in the mood for?
+                    </label>
+                    <input
+                      id="query"
+                      name="query"
+                      class="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-base focus:border-primary-500 focus:ring-2 focus:ring-primary-500 outline-none transition"
+                      placeholder="e.g., 'found family space opera' or 'psychological thriller with unreliable narrator'"
+                      required
+                    />
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                      <label
+                        for="category"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        Category
+                      </label>
+                      <select
+                        id="category"
+                        name="category"
+                        class="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-base focus:border-primary-500 focus:ring-2 focus:ring-primary-500 outline-none transition"
+                      >
+                        {% for c in categories %}
+                        <option value="{{c}}">{{c}}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+
+                    <div class="space-y-2">
+                      <label
+                        for="tone"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        Emotional Tone
+                      </label>
+                      <select
+                        id="tone"
+                        name="tone"
+                        class="mt-1 block w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-base focus:border-primary-500 focus:ring-2 focus:ring-primary-500 outline-none transition"
+                      >
+                        {% for t in tones %}
+                        <option value="{{t}}">{{t}}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="pt-2">
+                    <button
+                      id="submit"
+                      type="submit"
+                      class="w-full md:w-auto btn-hover inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-semibold px-6 py-3 transition-all shadow-md hover:shadow-lg"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      Find Books
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          <!-- Results Section -->
+          <section>
+            <!-- Loader -->
+            <div
+              id="loader"
+              class="hidden flex flex-col items-center justify-center py-12"
+            >
+              <div
+                class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"
+              ></div>
+              <p class="mt-4 text-lg text-slate-600 dark:text-slate-400">
+                Searching our library...
+              </p>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              id="empty"
+              class="hidden text-center py-12 px-4 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-12 w-12 mx-auto text-slate-400 dark:text-slate-600 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.5"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                />
+              </svg>
+              <h3
+                class="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2"
+              >
+                No books found yet
+              </h3>
+              <p class="text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+                Try a prompt like
+                <span class="font-medium text-primary-600 dark:text-primary-400"
+                  >"found family space opera"</span
+                >
+                or
+                <span class="font-medium text-primary-600 dark:text-primary-400"
+                  >"psychological thriller with unreliable narrator"</span
+                >. Select a tone to re-rank results by emotional quality.
+              </p>
+            </div>
+
+            <!-- Results Header -->
+            <div
+              id="resultsHeader"
+              class="hidden mb-6 flex items-center justify-between"
+            >
+              <h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                Recommendations
+              </h2>
+              <p
+                id="resultsCount"
+                class="text-sm text-slate-500 dark:text-slate-400"
+              >
+                <span id="count">0</span> books found
+              </p>
+            </div>
+
+            <!-- Gallery -->
+            <div
+              id="gallery"
+              class="hidden grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            ></div>
+          </section>
         </div>
+      </main>
 
-        <div
-          id="gallery"
-          class="grid gap-3 md:gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
-        ></div>
-      </section>
-    </main>
+      <!-- Footer -->
+      <footer
+        class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800"
+      >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div class="flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <span class="text-2xl">📚</span>
+              <span class="text-sm text-slate-600 dark:text-slate-400"
+                >Semantic Book Recommender</span
+              >
+            </div>
+            <div
+              class="mt-4 md:mt-0 text-sm text-slate-500 dark:text-slate-500"
+            >
+              Powered by AI & good reads
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
 
     <script>
-      // Theme toggle
+      // Theme toggle with animation
       document.getElementById("themeToggle").addEventListener("click", () => {
         const el = document.documentElement;
-        const dark = el.classList.toggle("dark");
-        localStorage.setItem("theme", dark ? "dark" : "light");
+        const isDark = el.classList.toggle("dark");
+
+        // Add animation class
+        document.body.classList.add("theme-transition");
+        setTimeout(() => {
+          document.body.classList.remove("theme-transition");
+        }, 300);
+
+        localStorage.setItem("theme", isDark ? "dark" : "light");
       });
 
+      // Form submission with better UX
       const form = document.getElementById("form");
       const submitBtn = document.getElementById("submit");
       const loader = document.getElementById("loader");
       const gallery = document.getElementById("gallery");
       const empty = document.getElementById("empty");
-      const FALLBACK = "{{ fallback_img }}"; // from FastAPI
+      const resultsHeader = document.getElementById("resultsHeader");
+      const resultsCount = document.getElementById("count");
+      const FALLBACK =
+        "https://www.press.uillinois.edu/books/images/no_cover.jpg";
 
+      // Improved card template with loading state and error handling
       function cardTemplate(item) {
-        // Elegant, responsive card with fixed cover aspect and clamped text
         return `
-          <article class="group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800
-                          bg-white dark:bg-slate-900 shadow-sm hover:shadow-md hover:-translate-y-0.5
-                          transition transform duration-200">
-            <div class="relative">
+          <article class="group relative overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800
+                        bg-white dark:bg-slate-900 shadow-card hover:shadow-card-hover hover:-translate-y-1
+                        transition-all duration-300 flex flex-col h-full">
+            <div class="relative aspect-[2/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
               <img
-                src="${item.thumbnail}"
-                alt="${item.title}"
+                src="${item.thumbnail || FALLBACK}"
+                alt="Cover of ${item.title}"
                 loading="lazy"
-                onerror="this.onerror=null; this.src='${FALLBACK}';"
-                class="w-full aspect-[3/4] object-cover bg-slate-200 dark:bg-slate-800" />
+                data-src="${item.thumbnail || FALLBACK}"
+                onerror="this.onerror=null; this.src='${FALLBACK}'; this.setAttribute('data-loaded', 'true');"
+                class="w-full h-full object-cover transition-opacity duration-300"
+                data-loaded="false"
+              />
+
             </div>
-            <div class="p-3">
-              <h3 class="text-sm font-semibold clamp-2">${item.title}</h3>
-              <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5 clamp-2">${item.authors}</p>
-              <p class="text-xs mt-2 text-slate-700 dark:text-slate-300 clamp-4">${item.caption}</p>
+            <div class="p-4 flex-1 flex flex-col">
+              <h3 class="text-lg font-semibold text-slate-900 dark:text-slate-100 clamp-2 mb-1">${
+                item.title
+              }</h3>
+              <p class="text-sm text-slate-600 dark:text-slate-400 clamp-2 mb-3">${
+                item.authors || "Unknown author"
+              }</p>
+              <p class="text-sm text-slate-700 dark:text-slate-300 clamp-3 mt-auto">${
+                item.caption || "No description available"
+              }</p>
             </div>
           </article>
         `;
       }
 
+      // Image lazy loading observer
+      const lazyLoadImages = () => {
+        const lazyImages = [].slice.call(
+          document.querySelectorAll("img[data-loaded='false']")
+        );
+
+        if ("IntersectionObserver" in window) {
+          let lazyImageObserver = new IntersectionObserver(function (
+            entries,
+            observer
+          ) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                let lazyImage = entry.target;
+                lazyImage.src = lazyImage.dataset.src;
+                lazyImage.setAttribute("data-loaded", "true");
+                lazyImageObserver.unobserve(lazyImage);
+              }
+            });
+          });
+
+          lazyImages.forEach(function (lazyImage) {
+            lazyImageObserver.observe(lazyImage);
+          });
+        }
+      };
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
+
+        // Reset UI
         gallery.innerHTML = "";
+        gallery.classList.add("hidden");
         empty.classList.add("hidden");
+        resultsHeader.classList.add("hidden");
         loader.classList.remove("hidden");
         submitBtn.disabled = true;
 
+        // Add loading state to button
+        submitBtn.innerHTML = `
+          <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Searching...
+        `;
+
         const payload = {
-          query: document.getElementById("query").value,
+          query: document.getElementById("query").value.trim(),
           category: document.getElementById("category").value,
           tone: document.getElementById("tone").value,
         };
@@ -233,26 +501,59 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
-          const data = await res.json();
 
+          if (!res.ok) throw new Error(res.statusText);
+
+          const data = await res.json();
           const items = data.results || [];
-          if (!items.length) {
+
+          if (items.length) {
+            resultsHeader.classList.remove("hidden");
+            resultsCount.textContent = items.length;
+            gallery.classList.remove("hidden");
+
+            const frag = document.createDocumentFragment();
+            items.forEach((item) => {
+              const wrapper = document.createElement("div");
+              wrapper.innerHTML = cardTemplate(item).trim();
+              frag.appendChild(wrapper.firstElementChild);
+            });
+            gallery.appendChild(frag);
+
+            // Initialize lazy loading for images
+            setTimeout(lazyLoadImages, 100);
+          } else {
             empty.classList.remove("hidden");
           }
-          const frag = document.createDocumentFragment();
-          items.forEach((item) => {
-            const wrapper = document.createElement("div");
-            wrapper.innerHTML = cardTemplate(item).trim();
-            frag.appendChild(wrapper.firstElementChild);
-          });
-          gallery.appendChild(frag);
         } catch (err) {
-          console.error(err);
-          alert("Something went wrong. Please try again.");
+          console.error("Fetch error:", err);
+
+          // Show error state
+          empty.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h3 class="text-lg font-medium text-slate-900 dark:text-slate-100 mb-2">Something went wrong</h3>
+            <p class="text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+              We couldn't fetch recommendations right now. Please try again later.
+            </p>
+          `;
+          empty.classList.remove("hidden");
         } finally {
           loader.classList.add("hidden");
           submitBtn.disabled = false;
+          submitBtn.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Find Books
+          `;
         }
+      });
+
+      // Initialize lazy loading on page load
+      document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(lazyLoadImages, 500);
       });
     </script>
   </body>
