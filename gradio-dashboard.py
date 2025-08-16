@@ -110,4 +110,4 @@ with gr.Blocks(theme=gr.themes.Glass()) as dashboard:
 
 
 if __name__ == "__main__":
-    dashboard.launch()
+    dashboard.launch(share=True)
