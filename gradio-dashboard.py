@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
@@ -111,8 +110,4 @@ with gr.Blocks(theme=gr.themes.Glass()) as dashboard:
 
 
 if __name__ == "__main__":
-    dashboard.launch(
-        server_name="0.0.0.0",
-        server_port=int(os.environ.get("PORT", "7860")),
-        show_error=True,
-    )
+    dashboard.launch(share=True)
